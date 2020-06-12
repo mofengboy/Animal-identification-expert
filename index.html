@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 引入组件库 -->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <!--    规则文件-->
+    <script src="rule.js"></script>
+    <title>动物识别系统</title>
+</head>
+<body>
+<div id="app" class="app">
+    <h2 style="text-align: center">动物识别系统</h2>
+    规则：
+    <div class="rule">
+        <p>R1 IF 该动物有奶 THEN 该动物是哺乳动物</p>
+        <p>R2 IF 该动物有毛发 THEN 该动物是哺乳动物</p>
+        <p>R3 IF 该动物有羽毛 THEN 该动物是鸟</p>
+        <p>R4 IF 该动物会飞 AND 会下蛋 THEN 该动物是鸟</p>
+        <p>R5 IF 该动物有爪 AND 有犬齿 AND 眼盯前方 THEN 该动物是食肉动物</p>
+        <p>R6 IF 该动物吃肉 THEN 该动物是肉食动物</p>
+        <p>R7 IF 该动物是哺乳动物 AND 有蹄 THEN 该动物是有蹄类动物</p>
+        <p>R8 IF 该动物是哺乳动物 AND 嚼反刍 THEN 该动物是有蹄类动物</p>
+        <p>R9 IF 该动物是哺乳动物 AND 该动物是食肉动物 AND 是黄褐色 AND 身上有黑色条纹 THEN 该动物是虎</p>
+        <p>R10 IF 该动物是哺乳动物 AND 该动物是食肉动物AND是黄褐色 AND 身上有暗斑点 THEN 该动物是金钱豹</p>
+        <p>R11 IF 该动物是有蹄类动物 AND 有长脖子 AND 有长腿 AND 身上有暗斑点 THEN 该动物是长颈鹿</p>
+        <p>R12 IF 该动物是有蹄类动物 AND 身上有黑色条纹 THEN 该动物是斑马</p>
+        <p>R13 IF 该动物是鸟 AND 有不会飞 AND 有长腿 AND 长脖子 AND 是黑白二色 THEN 该动物是鸵鸟</p>
+        <p>R14 IF 该动物是鸟 AND 不会飞 AND 会游泳 AND 是黑白二色 THEN 该动物是企鹅</p>
+        <p>R15 IF 该动物是鸟 AND 善飞
+    </div>
+    特征：
+    <div class="fact">
+        <div style="display: inline" v-for="(fact,index) in featureView">
+            <el-button class="fact_item" plain v-on:click="addFact(index,fact)">{{fact}}</el-button>
+        </div>
+    </div>
+    已选特征：
+    <div class="select">
+        <div style="display: inline" v-for="(fact,index) in selectRuleName">
+            <el-button class="fact_item" plain>{{fact}}</el-button>
+        </div>
+    </div>
+    推测结果：
+    <div class="result">
+        <div v-for="(animal,index) in animalName">
+            <div>{{animal}}</div>
+        </div>
+
+    </div>
+    <div class="button">
+        <el-button type="primary" plain v-on:click="matchRule()">推理</el-button>
+        <el-button type="primary" plain v-on:click="resetSelect()">重置</el-button>
+    </div>
+    <el-dialog title="增加规则" :visible.sync="dialogVisible">
+        <div style="margin: 10px auto">
+            <img style="width: 100%" src="https://pic.downk.cc/item/5ee20abac2a9a83be59c565f.png">
+        </div>
+        <div>
+            <div>
+                结果：
+                <el-input
+                        placeholder="请输入内容"
+                        suffix-icon="el-icon-date"
+                        v-model="input0">
+                </el-input>
+            </div>
+            条件(默认为0):
+            <div class="input-size">
+                <div class="item-input-size">
+                    <el-input
+
+                            placeholder="请输入内容"
+                            suffix-icon="el-icon-date"
+                            v-model="input1">
+                    </el-input>
+                </div>
+                <div class="item-input-size">
+                    <el-input
+
+                            placeholder="请输入内容"
+                            suffix-icon="el-icon-date"
+                            v-model="input2">
+                    </el-input>
+                </div>
+                <div class="item-input-size">
+                    <el-input
+
+                            placeholder="请输入内容"
+                            suffix-icon="el-icon-date"
+                            v-model="input3">
+                    </el-input>
+                </div>
+                <div class="item-input-size">
+                    <el-input
+
+                            placeholder="请输入内容"
+                            suffix-icon="el-icon-date"
+                            v-model="input4">
+                    </el-input>
+                </div>
+                <div class="item-input-size">
+                    <el-input
+
+                            placeholder="请输入内容"
+                            suffix-icon="el-icon-date"
+                            v-model="input5">
+                    </el-input>
+                </div>
+            </div>
+        </div>
+        <div class="button">
+            <el-button style="width: 100%" type="primary" v-on:click="addRule()">确认添加</el-button>
+        </div>
+    </el-dialog>
+    <el-backtop visibility-height="0" v-on:click="openDialog()"><i class="el-icon-plus"/></el-backtop>
+</div>
+</body>
+<script>
+    new Vue({
+        el: '#app',
+        data() {
+            // 数据
+            return {
+                dialogVisible: false,
+                featureView: [
+                    "", "有毛发", "有奶", "有羽毛", "会飞",
+                    "会下蛋", "吃肉", "有犬齿", "有爪", "眼盯前方",
+                    "有蹄", "嚼反刍", "黄褐色", "身上有暗斑点", "身上有黑色条纹",
+                    "有长脖子", "有长腿", "不会飞", "会游泳", "有黑白二色",
+                    "善飞", "哺乳动物", "鸟", "食肉动物", "蹄类动物"
+                ],
+                factView: [
+                    "", "有毛发", "有奶", "有羽毛", "会飞",
+                    "会下蛋", "吃肉", "有犬齿", "有爪", "眼盯前方",
+                    "有蹄", "嚼反刍", "黄褐色", "身上有暗斑点", "身上有黑色条纹",
+                    "有长脖子", "有长腿", "不会飞", "会游泳", "有黑白二色",
+                    "善飞", "哺乳动物", "鸟", "食肉动物", "蹄类动物",
+                    "金钱豹", "虎", "长颈鹿", "斑马", "鸵鸟",
+                    "企鹅", "信天翁"
+                ],
+                rule: [],
+                selectRuleName: [],
+                selectRule: [],
+                animalName: [],
+                input0: "",
+                input1: 0,
+                input2: 0,
+                input3: 0,
+                input4: 0,
+                input5: 0,
+            }
+        },
+        // 生命周期 网页渲染前执行的函数
+        mounted() {
+            // 加载规则文件
+            this.rule = rule;
+            console.log(this.rule)
+        },
+        // 方法
+        methods: {
+            addFact: function (index, name) {
+                if (index !== 0) {
+                    this.selectRuleName.push(name);
+                    this.selectRule.push(index);
+                }
+            },
+            openDialog: function () {
+                this.dialogVisible = true;
+            },
+            matchRule: function () {
+                let count = 0;
+                let flag = true;
+                for (let i = 0; i < this.rule.length; i++) {
+                    // console.log(this.rule[i]);
+                    for (let j = 0; j < this.selectRule.length; j++) {
+                        for (let k = 1; k < this.rule[k].length; k++) {
+                            if (this.selectRule[j] === this.rule[i][k]) {
+                                ++count;
+                            }
+                        }
+                    }
+                    if (this.selectRule.length === count) {
+                        console.log(this.factView[this.rule[i][0]]);
+                        this.animalName.push(this.factView[this.rule[i][0]]);
+                        //return this.rule[i][0];
+                        flag = false;
+                    }
+                    count = 0;
+                }
+                //console.log(0);
+                if (flag) {
+                    this.animalName = ["无匹配"];
+                    return 0;
+                }
+            },
+            resetSelect: function () {
+                this.selectRuleName = [];
+                this.selectRule = [];
+                this.animalName = []
+            },
+            addRule: function () {
+                let newRule = [];
+                newRule.push(parseInt(this.input0));
+                newRule.push(parseInt(this.input1));
+                newRule.push(parseInt(this.input2));
+                newRule.push(parseInt(this.input3));
+                newRule.push(parseInt(this.input4));
+                newRule.push(parseInt(this.input5));
+                this.rule.push(newRule);
+
+                this.$message({
+                    message: '添加成功！',
+                    type: 'success'
+                });
+
+                this.dialogVisible = false;
+                console.log(this.rule)
+            }
+        }
+
+    })
+</script>
+<style>
+    .app {
+        margin: auto;
+        padding: 5px 15px 15px 15px;
+        width: 60%;
+        box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1)
+    }
+
+    .rule {
+        margin: auto;
+        padding: 0 30px;
+    }
+
+    .fact {
+        margin: auto;
+        padding: 0 30px;
+    }
+
+    .fact_item {
+        margin: 5px;
+    }
+
+    .select {
+        padding: 0 30px;
+        text-align: center;;
+    }
+
+    .result {
+        margin: auto;
+        padding: 0 30px;
+        text-align: center;;
+    }
+
+    .button {
+        width: 200px;
+        margin: auto;
+        padding-top: 20px;
+        padding-bottom: 30px;
+    }
+
+    .input-size {
+        margin: 5px auto;
+    }
+
+    .item-input-size {
+        margin: 5px auto;
+        width: 19%;
+        display: inline-block;
+    }
+
+</style>
+</html>
